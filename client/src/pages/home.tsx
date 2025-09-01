@@ -1,30 +1,51 @@
-import { useState } from 'react';
-import PasswordScreen from '@/components/password-screen';
+import { useState, useEffect } from 'react';
+import LoginScreen from '@/components/login-screen';
 import FileGrid from '@/components/file-grid';
-import AdminSettings from '@/components/admin-settings';
 import { Button } from '@/components/ui/button';
-import { Settings } from 'lucide-react';
+import { LogOut } from 'lucide-react';
+import { onAuthChange, logout } from '@/lib/firebase';
 
 export default function Home() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [accessCode, setAccessCode] = useState(() => {
-    // Load access code from localStorage or use default
-    return localStorage.getItem('delta2zero-access-code') || 'delta2025';
-  });
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+
+  useEffect(() => {
+    const unsubscribe = onAuthChange((user) => {
+      setIsAuthenticated(!!user);
+      setUserEmail(user?.email || null);
+      setIsLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   const handleAuthenticated = () => {
     setIsAuthenticated(true);
   };
 
-  const handleAccessCodeChange = (newCode: string) => {
-    // Save to localStorage for persistence
-    localStorage.setItem('delta2zero-access-code', newCode);
-    setAccessCode(newCode);
+  const handleLogout = async () => {
+    try {
+      await logout();
+      setIsAuthenticated(false);
+      setUserEmail(null);
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
   };
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center gradient-bg">
+        <div className="text-center">
+          <div className="text-primary text-lg font-medium">Loading...</div>
+        </div>
+      </div>
+    );
+  }
+
   if (!isAuthenticated) {
-    return <PasswordScreen onAuthenticated={handleAuthenticated} accessCode={accessCode} />;
+    return <LoginScreen onAuthenticated={handleAuthenticated} />;
   }
 
   return (
@@ -36,14 +57,22 @@ export default function Home() {
             <h1 className="text-3xl font-black text-primary" data-testid="text-app-title">
               Delta2zero
             </h1>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setIsSettingsOpen(true)}
-              data-testid="button-admin-settings"
-            >
-              <Settings className="w-4 h-4" />
-            </Button>
+            <div className="flex items-center gap-4">
+              {userEmail && (
+                <span className="text-sm text-muted-foreground hidden sm:block">
+                  {userEmail}
+                </span>
+              )}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleLogout}
+                data-testid="button-logout"
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                Sign Out
+              </Button>
+            </div>
           </div>
         </div>
       </header>
@@ -52,14 +81,6 @@ export default function Home() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <FileGrid />
       </main>
-      
-      {/* Admin Settings Modal */}
-      <AdminSettings
-        isOpen={isSettingsOpen}
-        onClose={() => setIsSettingsOpen(false)}
-        currentAccessCode={accessCode}
-        onAccessCodeChange={handleAccessCodeChange}
-      />
     </div>
   );
 }
