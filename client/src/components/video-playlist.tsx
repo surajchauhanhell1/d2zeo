@@ -62,15 +62,18 @@ export default function VideoPlaylist({ files, initialVideoId, isOpen, onClose }
   const handleVideoError = async () => {
     console.log(`Video error on attempt ${urlAttempt + 1} for video:`, currentVideo?.name);
     
+    // Add a small delay before trying next URL to avoid rapid failures
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
     if (urlAttempt === 0) {
       // Try alternative URL
       console.log('Trying alternative URL...');
       setCurrentVideoUrl(getVideoUrlAlternative(currentVideo.id));
       setUrlAttempt(1);
     } else if (urlAttempt === 1) {
-      // Try embed URL as final fallback
-      console.log('Trying embed URL...');
-      setCurrentVideoUrl(getVideoUrlEmbed(currentVideo.id));
+      // Try a different direct download approach
+      console.log('Trying direct file access...');
+      setCurrentVideoUrl(`https://drive.google.com/file/d/${currentVideo.id}/view`);
       setUrlAttempt(2);
     } else {
       // All attempts failed
@@ -89,7 +92,8 @@ export default function VideoPlaylist({ files, initialVideoId, isOpen, onClose }
     setIsRetrying(true);
     setVideoError(false);
     setUrlAttempt(0);
-    setCurrentVideoUrl(getVideoUrl(currentVideo.id));
+    // Try the embed URL first on manual retry
+    setCurrentVideoUrl(getVideoUrlEmbed(currentVideo.id));
   };
 
   const playNext = () => {
@@ -179,13 +183,23 @@ export default function VideoPlaylist({ files, initialVideoId, isOpen, onClose }
                     <div className="text-center">
                       <p className="mb-2 text-lg font-semibold">Unable to play video</p>
                       <p className="text-sm text-gray-300 mb-4">
-                        The video format may not be supported or there was an error loading the file.<br/>
-                        You can try refreshing or skip to another video.
+                        This video cannot be streamed directly. This may be due to:<br/>
+                        • Large file size requiring download<br/>
+                        • Restricted sharing permissions<br/>
+                        • Unsupported video format<br/><br/>
+                        Try opening in Google Drive or skip to another video.
                       </p>
                       <div className="flex gap-2 justify-center">
                         <Button onClick={retryVideo} variant="outline">
                           <RefreshCw className="w-4 h-4 mr-2" />
                           Retry
+                        </Button>
+                        <Button 
+                          onClick={() => window.open(currentVideo.webViewLink, '_blank')} 
+                          variant="outline"
+                          disabled={!currentVideo.webViewLink}
+                        >
+                          Open in Drive
                         </Button>
                         <Button onClick={playPrevious} disabled={currentVideoIndex === 0}>
                           <SkipBack className="w-4 h-4 mr-2" />
@@ -219,14 +233,13 @@ export default function VideoPlaylist({ files, initialVideoId, isOpen, onClose }
                     onPause={() => setIsPlaying(false)}
                     data-testid="playlist-video-player"
                     key={currentVideo.id}
-                    autoPlay
+                    autoPlay={false}
                     preload="metadata"
+                    crossOrigin="anonymous"
                   >
                     <source src={currentVideoUrl} type="video/mp4" />
                     <source src={currentVideoUrl} type="video/webm" />
                     <source src={currentVideoUrl} type="video/ogg" />
-                    <source src={currentVideoUrl} type="video/quicktime" />
-                    <source src={currentVideoUrl} type="video/x-msvideo" />
                     Your browser does not support the video tag.
                   </video>
                 )}
