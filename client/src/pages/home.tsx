@@ -7,7 +7,10 @@ import { Settings } from 'lucide-react';
 
 export default function Home() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [accessCode, setAccessCode] = useState('delta2025');
+  const [accessCode, setAccessCode] = useState(() => {
+    // Load access code from localStorage or use default
+    return localStorage.getItem('delta2zero-access-code') || 'delta2025';
+  });
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const handleAuthenticated = () => {
@@ -15,6 +18,8 @@ export default function Home() {
   };
 
   const handleAccessCodeChange = (newCode: string) => {
+    // Save to localStorage for persistence
+    localStorage.setItem('delta2zero-access-code', newCode);
     setAccessCode(newCode);
   };
 
