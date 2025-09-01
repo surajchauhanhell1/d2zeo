@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { DriveFile } from '@/types/drive-types';
-import { getVideoUrl, getFileType } from '@/services/google-drive';
+import { getVideoUrl, getVideoUrlAlternative, getVideoUrlEmbed, getFileType } from '@/services/google-drive';
 import { 
   Play, 
   Pause, 
@@ -15,7 +15,8 @@ import {
   Maximize,
   Minimize,
   List,
-  X
+  X,
+  RefreshCw
 } from 'lucide-react';
 
 interface VideoPlaylistProps {
@@ -33,6 +34,9 @@ export default function VideoPlaylist({ files, initialVideoId, isOpen, onClose }
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showPlaylist, setShowPlaylist] = useState(true);
   const [videoError, setVideoError] = useState(false);
+  const [currentVideoUrl, setCurrentVideoUrl] = useState('');
+  const [urlAttempt, setUrlAttempt] = useState(0);
+  const [isRetrying, setIsRetrying] = useState(false);
 
   // Find initial video index
   useEffect(() => {
@@ -44,33 +48,64 @@ export default function VideoPlaylist({ files, initialVideoId, isOpen, onClose }
     }
   }, [initialVideoId, videoFiles]);
 
+  // Update video URL when current video changes
+  useEffect(() => {
+    if (currentVideo) {
+      setCurrentVideoUrl(getVideoUrl(currentVideo.id));
+      setUrlAttempt(0);
+      setVideoError(false);
+    }
+  }, [currentVideo]);
+
   const currentVideo = videoFiles[currentVideoIndex];
 
-  const handleVideoError = () => {
-    setVideoError(true);
+  const handleVideoError = async () => {
+    console.log(`Video error on attempt ${urlAttempt + 1} for video:`, currentVideo?.name);
+    
+    if (urlAttempt === 0) {
+      // Try alternative URL
+      console.log('Trying alternative URL...');
+      setCurrentVideoUrl(getVideoUrlAlternative(currentVideo.id));
+      setUrlAttempt(1);
+    } else if (urlAttempt === 1) {
+      // Try embed URL as final fallback
+      console.log('Trying embed URL...');
+      setCurrentVideoUrl(getVideoUrlEmbed(currentVideo.id));
+      setUrlAttempt(2);
+    } else {
+      // All attempts failed
+      console.log('All video URL attempts failed');
+      setVideoError(true);
+    }
   };
 
   const handleVideoLoad = () => {
     setVideoError(false);
+    setIsRetrying(false);
+    console.log('Video loaded successfully');
+  };
+
+  const retryVideo = () => {
+    setIsRetrying(true);
+    setVideoError(false);
+    setUrlAttempt(0);
+    setCurrentVideoUrl(getVideoUrl(currentVideo.id));
   };
 
   const playNext = () => {
     if (currentVideoIndex < videoFiles.length - 1) {
       setCurrentVideoIndex(currentVideoIndex + 1);
-      setVideoError(false);
     }
   };
 
   const playPrevious = () => {
     if (currentVideoIndex > 0) {
       setCurrentVideoIndex(currentVideoIndex - 1);
-      setVideoError(false);
     }
   };
 
   const selectVideo = (index: number) => {
     setCurrentVideoIndex(index);
-    setVideoError(false);
   };
 
   const togglePlay = () => {
@@ -115,8 +150,6 @@ export default function VideoPlaylist({ files, initialVideoId, isOpen, onClose }
 
   if (!currentVideo || videoFiles.length === 0) return null;
 
-  const videoSrc = getVideoUrl(currentVideo.id);
-
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-7xl max-h-[95vh] p-0">
@@ -144,11 +177,16 @@ export default function VideoPlaylist({ files, initialVideoId, isOpen, onClose }
                 {videoError ? (
                   <div className="flex items-center justify-center h-full text-white">
                     <div className="text-center">
-                      <p className="mb-2">Unable to play video</p>
+                      <p className="mb-2 text-lg font-semibold">Unable to play video</p>
                       <p className="text-sm text-gray-300 mb-4">
-                        The video format may not be supported or there was an error loading the file.
+                        The video format may not be supported or there was an error loading the file.<br/>
+                        You can try refreshing or skip to another video.
                       </p>
                       <div className="flex gap-2 justify-center">
+                        <Button onClick={retryVideo} variant="outline">
+                          <RefreshCw className="w-4 h-4 mr-2" />
+                          Retry
+                        </Button>
                         <Button onClick={playPrevious} disabled={currentVideoIndex === 0}>
                           <SkipBack className="w-4 h-4 mr-2" />
                           Previous
@@ -160,21 +198,35 @@ export default function VideoPlaylist({ files, initialVideoId, isOpen, onClose }
                       </div>
                     </div>
                   </div>
+                ) : isRetrying ? (
+                  <div className="flex items-center justify-center h-full text-white">
+                    <div className="text-center">
+                      <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-4" />
+                      <p className="text-lg">Loading video...</p>
+                      <p className="text-sm text-gray-300">
+                        Trying different streaming method...
+                      </p>
+                    </div>
+                  </div>
                 ) : (
                   <video 
                     controls 
                     className="w-full h-full object-contain"
                     onError={handleVideoError}
-                    onLoadStart={handleVideoLoad}
+                    onLoadedData={handleVideoLoad}
+                    onCanPlay={handleVideoLoad}
                     onPlay={() => setIsPlaying(true)}
                     onPause={() => setIsPlaying(false)}
                     data-testid="playlist-video-player"
                     key={currentVideo.id}
                     autoPlay
+                    preload="metadata"
                   >
-                    <source src={videoSrc} type="video/mp4" />
-                    <source src={videoSrc} type="video/webm" />
-                    <source src={videoSrc} type="video/ogg" />
+                    <source src={currentVideoUrl} type="video/mp4" />
+                    <source src={currentVideoUrl} type="video/webm" />
+                    <source src={currentVideoUrl} type="video/ogg" />
+                    <source src={currentVideoUrl} type="video/quicktime" />
+                    <source src={currentVideoUrl} type="video/x-msvideo" />
                     Your browser does not support the video tag.
                   </video>
                 )}
