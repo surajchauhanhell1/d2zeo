@@ -62,7 +62,7 @@ export default function FileCard({
             data-testid={`button-play-video-${file.id}`}
           >
             <Play className="w-4 h-4 mr-2" />
-            Play Video
+            Watch Video
           </Button>
         );
       case 'pdf':

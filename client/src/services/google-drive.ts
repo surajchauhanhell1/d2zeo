@@ -42,7 +42,8 @@ export function formatFileSize(bytes?: string): string {
 }
 
 export function getVideoUrl(fileId: string): string {
-  return `https://drive.google.com/uc?export=download&id=${fileId}`;
+  // Use the direct download URL for better video streaming
+  return `https://drive.google.com/uc?export=download&id=${fileId}&confirm=t`;
 }
 
 export function getPDFUrl(fileId: string): string {

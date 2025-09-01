@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { fetchGoogleDriveFiles, getFileType } from '@/services/google-drive';
 import { DriveFile } from '@/types/drive-types';
 import FileCard from './file-card';
-import VideoModal from './video-modal';
+import VideoPlaylist from './video-playlist';
 import PDFModal from './pdf-modal';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -16,9 +16,9 @@ type SortField = 'name' | 'size' | 'type';
 type SortOrder = 'asc' | 'desc';
 
 export default function FileGrid() {
-  const [selectedVideo, setSelectedVideo] = useState<DriveFile | null>(null);
+  const [selectedVideoId, setSelectedVideoId] = useState<string | null>(null);
   const [selectedPDF, setSelectedPDF] = useState<DriveFile | null>(null);
-  const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
+  const [isVideoPlaylistOpen, setIsVideoPlaylistOpen] = useState(false);
   const [isPDFModalOpen, setIsPDFModalOpen] = useState(false);
   const [sortField, setSortField] = useState<SortField>('name');
   const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
@@ -38,8 +38,8 @@ export default function FileGrid() {
   });
 
   const handleOpenVideo = (file: DriveFile) => {
-    setSelectedVideo(file);
-    setIsVideoModalOpen(true);
+    setSelectedVideoId(file.id);
+    setIsVideoPlaylistOpen(true);
   };
 
   const handleOpenPDF = (file: DriveFile) => {
@@ -262,12 +262,13 @@ export default function FileGrid() {
       </div>
 
       {/* Modals */}
-      <VideoModal
-        file={selectedVideo}
-        isOpen={isVideoModalOpen}
+      <VideoPlaylist
+        files={files}
+        initialVideoId={selectedVideoId || undefined}
+        isOpen={isVideoPlaylistOpen}
         onClose={() => {
-          setIsVideoModalOpen(false);
-          setSelectedVideo(null);
+          setIsVideoPlaylistOpen(false);
+          setSelectedVideoId(null);
         }}
       />
 
