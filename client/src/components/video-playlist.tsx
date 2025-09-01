@@ -26,7 +26,7 @@ interface VideoPlaylistProps {
 }
 
 export default function VideoPlaylist({ files, initialVideoId, isOpen, onClose }: VideoPlaylistProps) {
-  const videoFiles = files.filter(file => getFileType(file.mimeType) === 'video');
+  const videoFiles = files; // Files are already filtered in the parent component
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);

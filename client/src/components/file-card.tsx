@@ -9,6 +9,7 @@ import {
   File, 
   FileSpreadsheet, 
   Presentation,
+  Folder,
   ExternalLink,
   Eye,
   Play,
@@ -20,7 +21,7 @@ interface FileCardProps {
   onOpenVideo: (file: DriveFile) => void;
   onOpenPDF: (file: DriveFile) => void;
   onOpenImage: (file: DriveFile) => void;
-  onWatchFolder: (file: DriveFile) => void;
+  onOpenFolder: (file: DriveFile) => void;
 }
 
 export default function FileCard({ 
@@ -28,13 +29,15 @@ export default function FileCard({
   onOpenVideo, 
   onOpenPDF, 
   onOpenImage, 
-  onWatchFolder 
+  onOpenFolder 
 }: FileCardProps) {
   const fileType = getFileType(file.mimeType);
   const fileSize = formatFileSize(file.size);
 
   const getFileIcon = () => {
     switch (fileType) {
+      case 'folder':
+        return <Folder className="w-12 h-12 text-blue-500" />;
       case 'video':
         return <PlayCircle className="w-12 h-12 text-primary" />;
       case 'pdf':
@@ -54,6 +57,17 @@ export default function FileCard({
 
   const getActionButton = () => {
     switch (fileType) {
+      case 'folder':
+        return (
+          <Button 
+            onClick={() => onOpenFolder(file)}
+            className="w-full"
+            data-testid={`button-open-folder-${file.id}`}
+          >
+            <Folder className="w-4 h-4 mr-2" />
+            Open Folder
+          </Button>
+        );
       case 'video':
         return (
           <Button 
@@ -90,13 +104,13 @@ export default function FileCard({
       default:
         return (
           <Button 
-            onClick={() => onWatchFolder(file)}
+            onClick={() => onOpenFolder(file)}
             variant="secondary"
             className="w-full"
-            data-testid={`button-watch-folder-${file.id}`}
+            data-testid={`button-open-folder-${file.id}`}
           >
             <ExternalLink className="w-4 h-4 mr-2" />
-            Watch Folder
+            Open in Drive
           </Button>
         );
     }
