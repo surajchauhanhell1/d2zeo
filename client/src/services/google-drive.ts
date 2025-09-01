@@ -62,18 +62,18 @@ export function formatFileSize(bytes?: string): string {
 }
 
 export function getVideoUrl(fileId: string): string {
-  // Primary direct download URL with confirmation bypass
-  return `https://drive.google.com/uc?export=download&id=${fileId}&confirm=t`;
+  // Use the embed preview URL which works better for streaming
+  return `https://drive.google.com/file/d/${fileId}/preview`;
 }
 
 export function getVideoUrlAlternative(fileId: string): string {
-  // Alternative streaming URL without confirmation
-  return `https://drive.google.com/uc?export=download&id=${fileId}`;
+  // Alternative direct download URL
+  return `https://drive.google.com/uc?export=download&id=${fileId}&confirm=t`;
 }
 
 export function getVideoUrlEmbed(fileId: string): string {
-  // Embed URL as final fallback
-  return `https://drive.google.com/file/d/${fileId}/preview`;
+  // Direct view URL as fallback
+  return `https://drive.google.com/file/d/${fileId}/view`;
 }
 
 export function getPDFUrl(fileId: string): string {

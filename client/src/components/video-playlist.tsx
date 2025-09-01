@@ -53,7 +53,7 @@ export default function VideoPlaylist({ files, initialVideoId, isOpen, onClose }
   // Update video URL when current video changes
   useEffect(() => {
     if (currentVideo) {
-      setCurrentVideoUrl(getVideoUrl(currentVideo.id));
+      setCurrentVideoUrl(getVideoUrlEmbed(currentVideo.id));
       setUrlAttempt(0);
       setVideoError(false);
     }
@@ -62,18 +62,15 @@ export default function VideoPlaylist({ files, initialVideoId, isOpen, onClose }
   const handleVideoError = async () => {
     console.log(`Video error on attempt ${urlAttempt + 1} for video:`, currentVideo?.name);
     
-    // Add a small delay before trying next URL to avoid rapid failures
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
     if (urlAttempt === 0) {
-      // Try alternative URL
-      console.log('Trying alternative URL...');
+      // Try direct download URL
+      console.log('Trying direct download URL...');
       setCurrentVideoUrl(getVideoUrlAlternative(currentVideo.id));
       setUrlAttempt(1);
     } else if (urlAttempt === 1) {
-      // Try a different direct download approach
-      console.log('Trying direct file access...');
-      setCurrentVideoUrl(`https://drive.google.com/file/d/${currentVideo.id}/view`);
+      // Try the original embed URL
+      console.log('Trying embed URL...');
+      setCurrentVideoUrl(getVideoUrl(currentVideo.id));
       setUrlAttempt(2);
     } else {
       // All attempts failed
@@ -92,7 +89,7 @@ export default function VideoPlaylist({ files, initialVideoId, isOpen, onClose }
     setIsRetrying(true);
     setVideoError(false);
     setUrlAttempt(0);
-    // Try the embed URL first on manual retry
+    // Start with the embed URL again
     setCurrentVideoUrl(getVideoUrlEmbed(currentVideo.id));
   };
 
@@ -113,7 +110,7 @@ export default function VideoPlaylist({ files, initialVideoId, isOpen, onClose }
   };
 
   const togglePlay = () => {
-    const video = document.querySelector('video') as HTMLVideoElement;
+    const video = document.querySelector('[data-testid="playlist-video-player"]') as HTMLVideoElement;
     if (video) {
       if (isPlaying) {
         video.pause();
@@ -131,11 +128,14 @@ export default function VideoPlaylist({ files, initialVideoId, isOpen, onClose }
             });
         }
       }
+    } else {
+      // If video element not found, might be using iframe
+      console.log('Video element not found, might be using iframe player');
     }
   };
 
   const toggleMute = () => {
-    const video = document.querySelector('video') as HTMLVideoElement;
+    const video = document.querySelector('[data-testid="playlist-video-player"]') as HTMLVideoElement;
     if (video) {
       video.muted = !isMuted;
       setIsMuted(!isMuted);
@@ -233,36 +233,43 @@ export default function VideoPlaylist({ files, initialVideoId, isOpen, onClose }
                     </div>
                   </div>
                 ) : (
-                  <video 
-                    controls 
-                    className="w-full h-full object-contain"
-                    onError={handleVideoError}
-                    onLoadedData={handleVideoLoad}
-                    onCanPlay={handleVideoLoad}
-                    onPlay={() => {
-                      setIsPlaying(true);
-                    }}
-                    onPause={() => {
-                      setIsPlaying(false);
-                    }}
-                    onEnded={() => {
-                      setIsPlaying(false);
-                      // Auto-play next video if available
-                      if (currentVideoIndex < videoFiles.length - 1) {
-                        setTimeout(() => playNext(), 1000);
-                      }
-                    }}
-                    data-testid="playlist-video-player"
-                    key={currentVideo.id}
-                    autoPlay={false}
-                    preload="metadata"
-                    crossOrigin="anonymous"
-                  >
-                    <source src={currentVideoUrl} type="video/mp4" />
-                    <source src={currentVideoUrl} type="video/webm" />
-                    <source src={currentVideoUrl} type="video/ogg" />
-                    Your browser does not support the video tag.
-                  </video>
+                  <div className="w-full h-full">
+                    {urlAttempt < 2 ? (
+                      <video 
+                        controls 
+                        className="w-full h-full object-contain"
+                        onError={handleVideoError}
+                        onLoadedData={handleVideoLoad}
+                        onCanPlay={handleVideoLoad}
+                        onPlay={() => setIsPlaying(true)}
+                        onPause={() => setIsPlaying(false)}
+                        onEnded={() => {
+                          setIsPlaying(false);
+                          if (currentVideoIndex < videoFiles.length - 1) {
+                            setTimeout(() => playNext(), 1000);
+                          }
+                        }}
+                        data-testid="playlist-video-player"
+                        key={`${currentVideo.id}-${urlAttempt}`}
+                        autoPlay={false}
+                        preload="metadata"
+                      >
+                        <source src={currentVideoUrl} type="video/mp4" />
+                        Your browser does not support the video tag.
+                      </video>
+                    ) : (
+                      <iframe
+                        src={currentVideoUrl}
+                        className="w-full h-full border-0"
+                        onError={handleVideoError}
+                        onLoad={handleVideoLoad}
+                        data-testid="playlist-video-iframe"
+                        key={`${currentVideo.id}-iframe`}
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      />
+                    )}
+                  </div>
                 )}
                 
                 {/* Custom Controls Overlay */}
