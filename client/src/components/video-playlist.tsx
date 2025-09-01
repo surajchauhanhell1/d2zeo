@@ -53,7 +53,8 @@ export default function VideoPlaylist({ files, initialVideoId, isOpen, onClose }
   // Update video URL when current video changes
   useEffect(() => {
     if (currentVideo) {
-      setCurrentVideoUrl(getVideoUrlEmbed(currentVideo.id));
+      // Start with the highest quality preview URL
+      setCurrentVideoUrl(`https://drive.google.com/file/d/${currentVideo.id}/preview?quality=hd1080`);
       setUrlAttempt(0);
       setVideoError(false);
     }
@@ -63,15 +64,20 @@ export default function VideoPlaylist({ files, initialVideoId, isOpen, onClose }
     console.log(`Video error on attempt ${urlAttempt + 1} for video:`, currentVideo?.name);
     
     if (urlAttempt === 0) {
-      // Try direct download URL
-      console.log('Trying direct download URL...');
-      setCurrentVideoUrl(getVideoUrlAlternative(currentVideo.id));
+      // Try high quality embed URL
+      console.log('Trying high quality embed URL...');
+      setCurrentVideoUrl(`https://drive.google.com/file/d/${currentVideo.id}/preview?quality=hd720`);
       setUrlAttempt(1);
     } else if (urlAttempt === 1) {
-      // Try the original embed URL
-      console.log('Trying embed URL...');
-      setCurrentVideoUrl(getVideoUrl(currentVideo.id));
+      // Try standard quality embed URL
+      console.log('Trying standard quality embed URL...');
+      setCurrentVideoUrl(`https://drive.google.com/file/d/${currentVideo.id}/preview`);
       setUrlAttempt(2);
+    } else if (urlAttempt === 2) {
+      // Try direct view URL as final fallback
+      console.log('Trying direct view URL...');
+      setCurrentVideoUrl(getVideoUrlEmbed(currentVideo.id));
+      setUrlAttempt(3);
     } else {
       // All attempts failed
       console.log('All video URL attempts failed');
@@ -89,8 +95,8 @@ export default function VideoPlaylist({ files, initialVideoId, isOpen, onClose }
     setIsRetrying(true);
     setVideoError(false);
     setUrlAttempt(0);
-    // Start with the embed URL again
-    setCurrentVideoUrl(getVideoUrlEmbed(currentVideo.id));
+    // Start with the highest quality URL again
+    setCurrentVideoUrl(`https://drive.google.com/file/d/${currentVideo.id}/preview?quality=hd1080`);
   };
 
   const playNext = () => {

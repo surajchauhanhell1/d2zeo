@@ -110,6 +110,8 @@
     background: #000;
     border-radius: var(--radius);
     overflow: hidden;
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
   }
 
   .pdf-viewer {
@@ -126,6 +128,16 @@
     width: 100vw;
     height: 100vh;
     object-fit: contain;
+  }
+
+  .video-container iframe {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+  }
+
+  .video-container video {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
   }
 
   .playlist-item-active {
