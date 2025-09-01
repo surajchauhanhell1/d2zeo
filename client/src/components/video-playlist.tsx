@@ -272,64 +272,6 @@ export default function VideoPlaylist({ files, initialVideoId, isOpen, onClose }
                   </div>
                 )}
                 
-                {/* Custom Controls Overlay */}
-                <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between bg-black/50 rounded-lg p-3">
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={playPrevious}
-                      disabled={currentVideoIndex === 0}
-                      className="text-white hover:bg-white/20"
-                      data-testid="button-previous-video"
-                    >
-                      <SkipBack className="w-4 h-4" />
-                    </Button>
-                    
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={togglePlay}
-                      className="text-white hover:bg-white/20"
-                      data-testid="button-toggle-play"
-                    >
-                      {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-                    </Button>
-                    
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={playNext}
-                      disabled={currentVideoIndex === videoFiles.length - 1}
-                      className="text-white hover:bg-white/20"
-                      data-testid="button-next-video"
-                    >
-                      <SkipForward className="w-4 h-4" />
-                    </Button>
-                  </div>
-                  
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={toggleMute}
-                      className="text-white hover:bg-white/20"
-                      data-testid="button-toggle-mute"
-                    >
-                      {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-                    </Button>
-                    
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={toggleFullscreen}
-                      className="text-white hover:bg-white/20"
-                      data-testid="button-toggle-fullscreen"
-                    >
-                      {isFullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
-                    </Button>
-                  </div>
-                </div>
               </div>
             </div>
           </div>
