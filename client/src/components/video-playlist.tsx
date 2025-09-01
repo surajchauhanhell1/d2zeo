@@ -117,10 +117,20 @@ export default function VideoPlaylist({ files, initialVideoId, isOpen, onClose }
     if (video) {
       if (isPlaying) {
         video.pause();
+        setIsPlaying(false);
       } else {
-        video.play();
+        const playPromise = video.play();
+        if (playPromise !== undefined) {
+          playPromise
+            .then(() => {
+              setIsPlaying(true);
+            })
+            .catch((error) => {
+              console.log('Play was prevented:', error);
+              setIsPlaying(false);
+            });
+        }
       }
-      setIsPlaying(!isPlaying);
     }
   };
 
@@ -229,8 +239,19 @@ export default function VideoPlaylist({ files, initialVideoId, isOpen, onClose }
                     onError={handleVideoError}
                     onLoadedData={handleVideoLoad}
                     onCanPlay={handleVideoLoad}
-                    onPlay={() => setIsPlaying(true)}
-                    onPause={() => setIsPlaying(false)}
+                    onPlay={() => {
+                      setIsPlaying(true);
+                    }}
+                    onPause={() => {
+                      setIsPlaying(false);
+                    }}
+                    onEnded={() => {
+                      setIsPlaying(false);
+                      // Auto-play next video if available
+                      if (currentVideoIndex < videoFiles.length - 1) {
+                        setTimeout(() => playNext(), 1000);
+                      }
+                    }}
                     data-testid="playlist-video-player"
                     key={currentVideo.id}
                     autoPlay={false}
