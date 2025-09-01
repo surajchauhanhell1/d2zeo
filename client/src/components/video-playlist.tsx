@@ -38,6 +38,8 @@ export default function VideoPlaylist({ files, initialVideoId, isOpen, onClose }
   const [urlAttempt, setUrlAttempt] = useState(0);
   const [isRetrying, setIsRetrying] = useState(false);
 
+  const currentVideo = videoFiles[currentVideoIndex];
+
   // Find initial video index
   useEffect(() => {
     if (initialVideoId) {
@@ -56,8 +58,6 @@ export default function VideoPlaylist({ files, initialVideoId, isOpen, onClose }
       setVideoError(false);
     }
   }, [currentVideo]);
-
-  const currentVideo = videoFiles[currentVideoIndex];
 
   const handleVideoError = async () => {
     console.log(`Video error on attempt ${urlAttempt + 1} for video:`, currentVideo?.name);
