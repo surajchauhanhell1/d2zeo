@@ -74,6 +74,7 @@ export function getVideoUrlAlternative(fileId: string): string {
 export function getVideoUrlEmbed(fileId: string): string {
   // Embed URL as final fallback
   return `https://drive.google.com/file/d/${fileId}/preview`;
+}
 
 export function getPDFUrl(fileId: string): string {
   return `https://drive.google.com/file/d/${fileId}/preview`;
