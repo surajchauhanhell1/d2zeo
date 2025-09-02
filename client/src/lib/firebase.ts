@@ -7,18 +7,24 @@ import { getDatabase, ref, set, onValue, remove, push, onDisconnect } from "fire
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-  apiKey: "AIzaSyCKEK1tBDqxHBuwiezIBlJkiWIgGqROogY",
-  authDomain: "d2zero.firebaseapp.com",
-  projectId: "d2zero",
-  storageBucket: "d2zero.firebasestorage.app",
-  messagingSenderId: "510533297980",
-  appId: "1:510533297980:web:249548ef6aa0d05740e039",
-  measurementId: "G-6WVWVC6D1L"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyCKEK1tBDqxHBuwiezIBlJkiWIgGqROogY",
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "d2zero.firebaseapp.com",
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "d2zero",
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "d2zero.firebasestorage.app",
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "510533297980",
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:510533297980:web:249548ef6aa0d05740e039",
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || "G-6WVWVC6D1L",
+  databaseURL: "https://d2zero-default-rtdb.firebaseio.com/"
 };
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+let analytics;
+try {
+  analytics = getAnalytics(app);
+} catch (error) {
+  console.log('Analytics not available in this environment');
+}
 export const auth = getAuth(app);
 export const database = getDatabase(app);
 
@@ -214,45 +220,61 @@ class FirebaseAuthManager {
   }
 
   async login(email: string, password: string): Promise<User> {
+    console.log('Attempting login for:', email);
+    
     // Check if email is already logged in
-    const hasExistingSession = await this.checkExistingSession(email);
-    if (hasExistingSession) {
-      throw new Error('This email is already logged in from another device or browser. Please try again later.');
+    try {
+      const hasExistingSession = await this.checkExistingSession(email);
+      if (hasExistingSession) {
+        throw new Error('This email is already logged in from another device or browser. Please try again later.');
+      }
+    } catch (error) {
+      console.warn('Could not check existing sessions, proceeding with login:', error);
     }
 
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    const user = userCredential.user;
-    
-    const sessionId = this.generateSessionId();
-    
-    // Check if this is a trial user
-    const isTrialUser = email.toLowerCase() === 'trial@d2zero.com';
-    
-    if (isTrialUser) {
-      this.sessionInfo = {
-        isTrialUser: true,
-        sessionStartTime: Date.now(),
-        sessionDuration: 2 * 60 * 1000, // 2 minutes in milliseconds
-        sessionId,
-        email: email.toLowerCase(),
-      };
-      this.saveSessionToStorage();
-      this.startSessionMonitoring();
-    } else {
-      this.sessionInfo = {
-        isTrialUser: false,
-        sessionStartTime: Date.now(),
-        sessionDuration: 0,
-        sessionId,
-        email: email.toLowerCase(),
-      };
-      this.saveSessionToStorage();
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+      
+      const sessionId = this.generateSessionId();
+      
+      // Check if this is a trial user
+      const isTrialUser = email.toLowerCase() === 'trial@d2zero.com';
+      
+      if (isTrialUser) {
+        this.sessionInfo = {
+          isTrialUser: true,
+          sessionStartTime: Date.now(),
+          sessionDuration: 2 * 60 * 1000, // 2 minutes in milliseconds
+          sessionId,
+          email: email.toLowerCase(),
+        };
+        this.saveSessionToStorage();
+        this.startSessionMonitoring();
+      } else {
+        this.sessionInfo = {
+          isTrialUser: false,
+          sessionStartTime: Date.now(),
+          sessionDuration: 0,
+          sessionId,
+          email: email.toLowerCase(),
+        };
+        this.saveSessionToStorage();
+      }
+      
+      // Create session in database
+      try {
+        await this.createSession(email.toLowerCase(), sessionId);
+      } catch (error) {
+        console.warn('Could not create session in database:', error);
+      }
+      
+      console.log('Login successful for:', email);
+      return user;
+    } catch (error: any) {
+      console.error('Firebase authentication error:', error);
+      throw new Error(error.message || 'Authentication failed');
     }
-    
-    // Create session in database
-    await this.createSession(email.toLowerCase(), sessionId);
-    
-    return user;
   }
 
   async logout(): Promise<void> {
