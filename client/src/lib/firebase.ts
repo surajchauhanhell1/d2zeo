@@ -4,6 +4,24 @@ import { getAnalytics } from "firebase/analytics";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, User } from "firebase/auth";
 import { getDatabase, ref, set, onValue, remove, push, onDisconnect } from "firebase/database";
 
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyCKEK1tBDqxHBuwiezIBlJkiWIgGqROogY",
+  authDomain: "d2zero.firebaseapp.com",
+  projectId: "d2zero",
+  storageBucket: "d2zero.firebasestorage.app",
+  messagingSenderId: "510533297980",
+  appId: "1:510533297980:web:249548ef6aa0d05740e039",
+  measurementId: "G-6WVWVC6D1L"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
+export const auth = getAuth(app);
+export const database = getDatabase(app);
+
 interface SessionInfo {
   isTrialUser: boolean;
   sessionStartTime: number;
@@ -275,24 +293,6 @@ class FirebaseAuthManager {
 }
 
 export const firebaseAuthManager = new FirebaseAuthManager();
-
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyCKEK1tBDqxHBuwiezIBlJkiWIgGqROogY",
-  authDomain: "d2zero.firebaseapp.com",
-  projectId: "d2zero",
-  storageBucket: "d2zero.firebasestorage.app",
-  messagingSenderId: "510533297980",
-  appId: "1:510533297980:web:249548ef6aa0d05740e039",
-  measurementId: "G-6WVWVC6D1L"
-};
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
-export const auth = getAuth(app);
-export const database = getDatabase(app);
 
 // Auth helper functions
 export const loginWithEmail = async (email: string, password: string) => {
