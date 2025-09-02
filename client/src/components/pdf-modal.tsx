@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { DriveFile } from '@/types/drive-types';
 import { getPDFUrl } from '@/services/google-drive';
-import { Download } from 'lucide-react';
+import { Download, ExternalLink } from 'lucide-react';
 
 interface PDFModalProps {
   file: DriveFile | null;
@@ -36,6 +36,9 @@ export default function PDFModal({ file, isOpen, onClose }: PDFModalProps) {
     }
   };
 
+  const handlePopOut = () => {
+    window.open('https://www.youtube.com/@ApnaCollegeOfficial', '_blank');
+  };
   if (!file) return null;
 
   const pdfSrc = getPDFUrl(file.id);
@@ -45,15 +48,26 @@ export default function PDFModal({ file, isOpen, onClose }: PDFModalProps) {
       <DialogContent className="max-w-6xl max-h-[95vh] p-0">
         <DialogHeader className="p-4 border-b flex flex-row items-center justify-between">
           <DialogTitle data-testid="text-pdf-title">{file.name}</DialogTitle>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleDownload}
-            data-testid="button-download-pdf"
-          >
-            <Download className="w-4 h-4 mr-2" />
-            Download
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handlePopOut}
+              data-testid="button-popout-pdf"
+              title="Visit Apna College YouTube Channel"
+            >
+              <ExternalLink className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleDownload}
+              data-testid="button-download-pdf"
+            >
+              <Download className="w-4 h-4 mr-2" />
+              Download
+            </Button>
+          </div>
         </DialogHeader>
         <div className="h-[85vh]">
           {pdfError ? (

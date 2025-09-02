@@ -16,7 +16,8 @@ import {
   RotateCw,
   List,
   X,
-  RefreshCw
+  RefreshCw,
+  ExternalLink
 } from 'lucide-react';
 
 interface VideoPlaylistProps {
@@ -169,6 +170,9 @@ export default function VideoPlaylist({ files, initialVideoId, isOpen, onClose }
     }
   };
 
+  const handlePopOut = () => {
+    window.open('https://www.youtube.com/@ApnaCollegeOfficial', '_blank');
+  };
   if (!currentVideo || videoFiles.length === 0) return null;
 
   return (
@@ -179,6 +183,15 @@ export default function VideoPlaylist({ files, initialVideoId, isOpen, onClose }
             {currentVideo.name} ({currentVideoIndex + 1} of {videoFiles.length})
           </DialogTitle>
           <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handlePopOut}
+              data-testid="button-popout"
+              title="Visit Apna College YouTube Channel"
+            >
+              <ExternalLink className="w-4 h-4" />
+            </Button>
             <Button
               variant="ghost"
               size="sm"
