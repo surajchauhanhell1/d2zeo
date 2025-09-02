@@ -140,6 +140,42 @@
     image-rendering: crisp-edges;
   }
 
+  /* Hide Google Drive's pop-out/external link buttons */
+  .pdf-viewer::after,
+  .video-container iframe::after,
+  iframe[src*="drive.google.com"]::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 50px;
+    height: 50px;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 10;
+    pointer-events: none;
+  }
+
+  /* Alternative approach - hide the pop-out button area */
+  .pdf-viewer,
+  .video-container {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .pdf-viewer::before,
+  .video-container::before {
+    content: '';
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 40px;
+    height: 40px;
+    background: var(--background);
+    z-index: 20;
+    border-radius: 6px;
+    pointer-events: none;
+  }
+
   .playlist-item-active {
     background: linear-gradient(135deg, hsl(221, 83%, 53%) 0%, hsl(262, 83%, 58%) 100%);
     color: white;
