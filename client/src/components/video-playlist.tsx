@@ -211,13 +211,6 @@ export default function VideoPlaylist({ files, initialVideoId, isOpen, onClose }
                           <RefreshCw className="w-4 h-4 mr-2" />
                           Retry
                         </Button>
-                        <Button 
-                          onClick={() => window.open(currentVideo.webViewLink, '_blank')} 
-                          variant="outline"
-                          disabled={!currentVideo.webViewLink}
-                        >
-                          Open in Drive
-                        </Button>
                         <Button onClick={playPrevious} disabled={currentVideoIndex === 0}>
                           <SkipBack className="w-4 h-4 mr-2" />
                           Previous
