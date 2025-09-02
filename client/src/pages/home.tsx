@@ -1,64 +1,39 @@
 import { useState, useEffect } from 'react';
 import LoginScreen from '@/components/login-screen';
 import FileGrid from '@/components/file-grid';
-import TrialTimer from '@/components/trial-timer';
 import { Button } from '@/components/ui/button';
 import { LogOut } from 'lucide-react';
-import { firebaseAuthManager } from '@/lib/firebase';
+import { onAuthChange, logout } from '@/lib/firebase';
 
 export default function Home() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [userEmail, setUserEmail] = useState<string | null>(null);
-  const [isTrialUser, setIsTrialUser] = useState(false);
 
   useEffect(() => {
-    // Set up logout callback
-    firebaseAuthManager.setLogoutCallback(() => {
-      setIsAuthenticated(false);
-      setUserEmail(null);
-      setIsTrialUser(false);
+    const unsubscribe = onAuthChange((user) => {
+      setIsAuthenticated(!!user);
+      setUserEmail(user?.email || null);
+      setIsLoading(false);
     });
 
-    // Check initial authentication state
-    const checkAuth = async () => {
-      // Try to initialize session from stored data
-      const sessionRestored = await firebaseAuthManager.initializeSession();
-      const authenticated = firebaseAuthManager.isAuthenticated();
-      const sessionInfo = firebaseAuthManager.getSessionInfo();
-      
-      setIsAuthenticated(authenticated);
-      setUserEmail(sessionInfo?.email || null);
-      setIsTrialUser(sessionInfo?.isTrialUser || false);
-      setIsLoading(false);
-    };
-
-    checkAuth();
+    return () => unsubscribe();
   }, []);
 
   const handleAuthenticated = () => {
-    const sessionInfo = firebaseAuthManager.getSessionInfo();
-    if (sessionInfo) {
-      setIsAuthenticated(true);
-      setUserEmail(sessionInfo.email);
-      setIsTrialUser(sessionInfo.isTrialUser);
-    }
+    setIsAuthenticated(true);
   };
 
   const handleLogout = async () => {
     try {
-      await firebaseAuthManager.logout();
+      await logout();
       setIsAuthenticated(false);
       setUserEmail(null);
-      setIsTrialUser(false);
     } catch (error) {
       console.error('Logout error:', error);
     }
   };
 
-  const handleTrialExpiry = () => {
-    handleLogout();
-  };
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center gradient-bg">
@@ -84,10 +59,8 @@ export default function Home() {
             </h1>
             <div className="flex items-center gap-4">
               {userEmail && (
-                <span className={`text-sm hidden sm:block ${
-                  isTrialUser ? 'text-orange-600 font-medium' : 'text-muted-foreground'
-                }`}>
-                  {userEmail} {isTrialUser && '(Trial)'}
+                <span className="text-sm text-muted-foreground hidden sm:block">
+                  {userEmail}
                 </span>
               )}
               <Button
@@ -103,11 +76,6 @@ export default function Home() {
           </div>
         </div>
       </header>
-
-      {/* Trial Timer */}
-      {isTrialUser && (
-        <TrialTimer onExpiry={handleTrialExpiry} />
-      )}
 
       {/* Main content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

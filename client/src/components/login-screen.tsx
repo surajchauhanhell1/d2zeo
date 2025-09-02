@@ -3,7 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { firebaseAuthManager } from '@/lib/firebase';
+import { loginWithEmail } from '@/lib/firebase';
 import { User, Mail, Lock } from 'lucide-react';
 
 interface LoginScreenProps {
@@ -22,7 +22,7 @@ export default function LoginScreen({ onAuthenticated }: LoginScreenProps) {
     setError('');
 
     try {
-      await firebaseAuthManager.login(email, password);
+      await loginWithEmail(email, password);
       onAuthenticated();
     } catch (error: any) {
       setError(error.message || 'Login failed. Please check your credentials.');
@@ -105,9 +105,6 @@ export default function LoginScreen({ onAuthenticated }: LoginScreenProps) {
 
           <div className="mt-6 text-center">
             <p className="text-xs text-muted-foreground">
-              Use trial@d2zero.com for 2-minute trial access
-            </p>
-            <p className="text-xs text-muted-foreground mt-1">
               Only registered users can access this application
             </p>
           </div>
