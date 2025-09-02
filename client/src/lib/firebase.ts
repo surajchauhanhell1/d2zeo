@@ -292,6 +292,7 @@ class FirebaseAuthManager {
     const remaining = this.sessionInfo.sessionDuration - elapsed;
     return Math.max(0, remaining);
   }
+}
 export const firebaseAuthManager = new FirebaseAuthManager();
 
 // Auth helper functions
