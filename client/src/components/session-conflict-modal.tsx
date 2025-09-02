@@ -43,8 +43,8 @@ export default function SessionConflictModal({ isOpen, onClose }: SessionConflic
           </div>
           <DialogDescription className="text-left">
             Your session has been terminated. This can happen if:
-            • Trial account logged in from another device
-            • Another user logged in with the same email
+            • This email was logged in from another device or browser
+            • Trial account session has expired (2 minutes)
             • Trial time has expired
           </DialogDescription>
         </DialogHeader>

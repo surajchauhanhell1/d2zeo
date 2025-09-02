@@ -2,23 +2,133 @@
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, User } from "firebase/auth";
+import { getDatabase, ref, set, onValue, remove, push, onDisconnect } from "firebase/database";
 
 interface SessionInfo {
   isTrialUser: boolean;
   sessionStartTime: number;
   sessionDuration: number; // in milliseconds
+  sessionId: string;
+  email: string;
 }
 
+interface ActiveSession {
+  sessionId: string;
+  email: string;
+  loginTime: number;
+  lastActivity: number;
+}
 class FirebaseAuthManager {
   private sessionInfo: SessionInfo | null = null;
   private sessionCheckInterval: NodeJS.Timeout | null = null;
   private onSessionExpiredCallback: (() => void) | null = null;
+  private onSessionConflictCallback: (() => void) | null = null;
+  private database: any;
+  private sessionRef: any = null;
 
   constructor() {
+    this.database = getDatabase();
     // Check for existing session on initialization
     this.loadSessionFromStorage();
+    this.setupSessionMonitoring();
   }
 
+  private generateSessionId(): string {
+    return `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  }
+
+  private async checkExistingSession(email: string): Promise<boolean> {
+    return new Promise((resolve) => {
+      const sessionsRef = ref(this.database, 'activeSessions');
+      onValue(sessionsRef, (snapshot) => {
+        const sessions = snapshot.val() || {};
+        const existingSession = Object.values(sessions).find(
+          (session: any) => session.email === email
+        );
+        resolve(!!existingSession);
+      }, { onlyOnce: true });
+    });
+  }
+
+  private async createSession(email: string, sessionId: string) {
+    const sessionData: ActiveSession = {
+      sessionId,
+      email,
+      loginTime: Date.now(),
+      lastActivity: Date.now()
+    };
+
+    this.sessionRef = ref(this.database, `activeSessions/${sessionId}`);
+    await set(this.sessionRef, sessionData);
+    
+    // Set up automatic cleanup on disconnect
+    onDisconnect(this.sessionRef).remove();
+    
+    // Update last activity every 30 seconds
+    const activityInterval = setInterval(async () => {
+      if (this.sessionRef) {
+        try {
+          await set(ref(this.database, `activeSessions/${sessionId}/lastActivity`), Date.now());
+        } catch (error) {
+          console.error('Failed to update activity:', error);
+          clearInterval(activityInterval);
+        }
+      } else {
+        clearInterval(activityInterval);
+      }
+    }, 30000);
+  }
+
+  private async removeSession() {
+    if (this.sessionRef) {
+      try {
+        await remove(this.sessionRef);
+        this.sessionRef = null;
+      } catch (error) {
+        console.error('Failed to remove session:', error);
+      }
+    }
+  }
+
+  private setupSessionMonitoring() {
+    // Monitor for session conflicts
+    const sessionsRef = ref(this.database, 'activeSessions');
+    onValue(sessionsRef, (snapshot) => {
+      if (!this.sessionInfo) return;
+      
+      const sessions = snapshot.val() || {};
+      const currentEmail = this.sessionInfo.email;
+      const currentSessionId = this.sessionInfo.sessionId;
+      
+      // Check if there's another session with the same email
+      const conflictingSessions = Object.values(sessions).filter(
+        (session: any) => session.email === currentEmail && session.sessionId !== currentSessionId
+      );
+      
+      if (conflictingSessions.length > 0) {
+        console.log('Session conflict detected - another login with same email');
+        this.handleSessionConflict();
+      }
+    });
+  }
+
+  private async handleSessionConflict() {
+    console.log('Session terminated due to conflict');
+    this.stopSessionMonitoring();
+    await this.removeSession();
+    this.sessionInfo = null;
+    this.saveSessionToStorage();
+    
+    try {
+      await signOut(auth);
+    } catch (error) {
+      console.error('Error during conflict logout:', error);
+    }
+    
+    if (this.onSessionConflictCallback) {
+      this.onSessionConflictCallback();
+    }
+  }
   private loadSessionFromStorage() {
     const stored = localStorage.getItem('d2zero_session');
     if (stored) {
@@ -86,8 +196,16 @@ class FirebaseAuthManager {
   }
 
   async login(email: string, password: string): Promise<User> {
+    // Check if email is already logged in
+    const hasExistingSession = await this.checkExistingSession(email);
+    if (hasExistingSession) {
+      throw new Error('This email is already logged in from another device or browser. Please try again later.');
+    }
+
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
+    
+    const sessionId = this.generateSessionId();
     
     // Check if this is a trial user
     const isTrialUser = email.toLowerCase() === 'trial@d2zero.com';
@@ -97,6 +215,8 @@ class FirebaseAuthManager {
         isTrialUser: true,
         sessionStartTime: Date.now(),
         sessionDuration: 2 * 60 * 1000, // 2 minutes in milliseconds
+        sessionId,
+        email: email.toLowerCase(),
       };
       this.saveSessionToStorage();
       this.startSessionMonitoring();
@@ -105,15 +225,21 @@ class FirebaseAuthManager {
         isTrialUser: false,
         sessionStartTime: Date.now(),
         sessionDuration: 0,
+        sessionId,
+        email: email.toLowerCase(),
       };
       this.saveSessionToStorage();
     }
+    
+    // Create session in database
+    await this.createSession(email.toLowerCase(), sessionId);
     
     return user;
   }
 
   async logout(): Promise<void> {
     this.stopSessionMonitoring();
+    await this.removeSession();
     this.sessionInfo = null;
     this.saveSessionToStorage();
     await signOut(auth);
@@ -135,12 +261,15 @@ class FirebaseAuthManager {
     this.onSessionExpiredCallback = callback;
   }
 
+  onSessionConflict(callback: () => void) {
+    this.onSessionConflictCallback = callback;
+  }
+
   // Check if another session might have started elsewhere
   checkForSessionConflict(): boolean {
-    if (!this.sessionInfo?.isTrialUser) return false;
+    if (!this.sessionInfo) return false;
     
-    // For trial users, we could implement additional checks here
-    // For now, we'll rely on Firebase's built-in session management
+    // This is now handled by the real-time database monitoring
     return false;
   }
 }
@@ -163,6 +292,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
 export const auth = getAuth(app);
+export const database = getDatabase(app);
 
 // Auth helper functions
 export const loginWithEmail = async (email: string, password: string) => {

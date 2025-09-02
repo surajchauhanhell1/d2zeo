@@ -30,6 +30,11 @@ export default function Home() {
       setShowSessionConflict(true);
     });
 
+    // Set up session conflict callback
+    firebaseAuthManager.onSessionConflict(() => {
+      setShowSessionConflict(true);
+    });
+
     return () => unsubscribe();
   }, []);
 
