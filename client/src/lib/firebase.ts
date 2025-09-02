@@ -3,12 +3,12 @@ import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, User 
 import { getFirestore, doc, setDoc, getDoc, deleteDoc, collection, query, where, getDocs } from 'firebase/firestore';
 
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyBnHPSdgv2Cc6wU38itY6YLriAb2g1_VQg",
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "delta2zero-default.firebaseapp.com",
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "delta2zero-default",
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "delta2zero-default.appspot.com",
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "123456789",
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:123456789:web:abcdef123456"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyCKEK1tBDqxHBuwiezIBlJkiWIgGqROogY",
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "d2zero.firebaseapp.com",
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "d2zero",
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "d2zero.firebasestorage.app",
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "510533297980",
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:510533297980:web:249548ef6aa0d05740e039"
 };
 
 // Initialize Firebase
