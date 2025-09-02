@@ -263,6 +263,14 @@ class FirebaseAuthManager {
     await signOut(auth);
   }
 
+  onSessionExpired(callback: () => void) {
+    this.onSessionExpiredCallback = callback;
+  }
+
+  onSessionConflict(callback: () => void) {
+    this.onSessionConflictCallback = callback;
+  }
+
   getSessionInfo(): SessionInfo | null {
     return this.sessionInfo;
   }
