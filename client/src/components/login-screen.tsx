@@ -3,7 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { loginWithEmail } from '@/lib/firebase';
+import { authManager } from '@/lib/auth-manager';
 import { User, Mail, Lock } from 'lucide-react';
 
 interface LoginScreenProps {
@@ -22,8 +22,16 @@ export default function LoginScreen({ onAuthenticated }: LoginScreenProps) {
     setError('');
 
     try {
-      await loginWithEmail(email, password);
-      onAuthenticated();
+      // Simple authentication check
+      if (email === 'trial@d2zero.com' && password === 'trial123') {
+        await authManager.login(email, password);
+        onAuthenticated();
+      } else if (email === 'admin@d2zero.com' && password === 'delta2025') {
+        await authManager.login(email, password);
+        onAuthenticated();
+      } else {
+        throw new Error('Invalid email or password');
+      }
     } catch (error: any) {
       setError(error.message || 'Login failed. Please check your credentials.');
       setEmail('');
@@ -105,7 +113,10 @@ export default function LoginScreen({ onAuthenticated }: LoginScreenProps) {
 
           <div className="mt-6 text-center">
             <p className="text-xs text-muted-foreground">
-              Only registered users can access this application
+              Use trial@d2zero.com / trial123 for 2-minute trial access
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Or admin@d2zero.com / delta2025 for full access
             </p>
           </div>
         </CardContent>

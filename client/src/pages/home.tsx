@@ -1,39 +1,62 @@
 import { useState, useEffect } from 'react';
 import LoginScreen from '@/components/login-screen';
 import FileGrid from '@/components/file-grid';
+import TrialTimer from '@/components/trial-timer';
 import { Button } from '@/components/ui/button';
 import { LogOut } from 'lucide-react';
-import { onAuthChange, logout } from '@/lib/firebase';
+import { authManager } from '@/lib/auth-manager';
 
 export default function Home() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [isTrialUser, setIsTrialUser] = useState(false);
 
   useEffect(() => {
-    const unsubscribe = onAuthChange((user) => {
-      setIsAuthenticated(!!user);
-      setUserEmail(user?.email || null);
-      setIsLoading(false);
+    // Set up logout callback
+    authManager.setLogoutCallback(() => {
+      setIsAuthenticated(false);
+      setUserEmail(null);
+      setIsTrialUser(false);
     });
 
-    return () => unsubscribe();
+    // Check initial authentication state
+    const checkAuth = () => {
+      const authenticated = authManager.isAuthenticated();
+      const sessionInfo = authManager.getSessionInfo();
+      
+      setIsAuthenticated(authenticated);
+      setUserEmail(sessionInfo?.email || null);
+      setIsTrialUser(sessionInfo?.isTrialUser || false);
+      setIsLoading(false);
+    };
+
+    checkAuth();
   }, []);
 
   const handleAuthenticated = () => {
-    setIsAuthenticated(true);
+    const sessionInfo = authManager.getSessionInfo();
+    if (sessionInfo) {
+      setIsAuthenticated(true);
+      setUserEmail(sessionInfo.email);
+      setIsTrialUser(sessionInfo.isTrialUser);
+    }
   };
 
   const handleLogout = async () => {
     try {
-      await logout();
+      authManager.logout();
       setIsAuthenticated(false);
       setUserEmail(null);
+      setIsTrialUser(false);
     } catch (error) {
       console.error('Logout error:', error);
     }
   };
 
+  const handleTrialExpiry = () => {
+    handleLogout();
+  };
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center gradient-bg">
@@ -59,8 +82,10 @@ export default function Home() {
             </h1>
             <div className="flex items-center gap-4">
               {userEmail && (
-                <span className="text-sm text-muted-foreground hidden sm:block">
-                  {userEmail}
+                <span className={`text-sm hidden sm:block ${
+                  isTrialUser ? 'text-orange-600 font-medium' : 'text-muted-foreground'
+                }`}>
+                  {userEmail} {isTrialUser && '(Trial)'}
                 </span>
               )}
               <Button
@@ -76,6 +101,11 @@ export default function Home() {
           </div>
         </div>
       </header>
+
+      {/* Trial Timer */}
+      {isTrialUser && (
+        <TrialTimer onExpiry={handleTrialExpiry} />
+      )}
 
       {/* Main content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
