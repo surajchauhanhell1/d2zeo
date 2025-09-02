@@ -297,33 +297,11 @@ export default function VideoPlaylist({ files, initialVideoId, isOpen, onClose }
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={skipBackward}
-                        className="text-white hover:bg-white/20"
-                        data-testid="button-skip-backward"
-                      >
-                        <RotateCcw className="w-4 h-4" />
-                        <span className="text-xs ml-1">10s</span>
-                      </Button>
-                      
-                      <Button
-                        variant="ghost"
-                        size="sm"
                         onClick={togglePlay}
                         className="text-white hover:bg-white/20"
                         data-testid="button-play-pause"
                       >
                         {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
-                      </Button>
-                      
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={skipForward}
-                        className="text-white hover:bg-white/20"
-                        data-testid="button-skip-forward"
-                      >
-                        <span className="text-xs mr-1">10s</span>
-                        <RotateCw className="w-4 h-4" />
                       </Button>
                       
                       <Button
