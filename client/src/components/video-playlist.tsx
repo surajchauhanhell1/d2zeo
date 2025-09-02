@@ -280,6 +280,17 @@ export default function VideoPlaylist({ files, initialVideoId, isOpen, onClose }
                         key={`${currentVideo.id}-iframe`}
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                         allowFullScreen
+                       sandbox="allow-scripts allow-same-origin allow-presentation"
+                      />
+                    )}
+                    
+                    {/* Overlay to intercept pop-out clicks on iframe */}
+                    {urlAttempt >= 2 && (
+                      <div 
+                        className="absolute top-2 right-2 w-10 h-10 cursor-pointer z-30"
+                        onClick={handlePopOut}
+                        title="Visit Apna College YouTube Channel"
+                        data-testid="iframe-popout-overlay"
                       />
                     )}
                   </div>

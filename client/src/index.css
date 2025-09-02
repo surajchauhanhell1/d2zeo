@@ -150,7 +150,7 @@
     right: 0;
     width: 50px;
     height: 50px;
-    background: rgba(0, 0, 0, 0.8);
+    background: transparent;
     z-index: 10;
     pointer-events: none;
   }
@@ -162,8 +162,23 @@
     overflow: hidden;
   }
 
-  .pdf-viewer::before,
-  .video-container::before {
+  /* Custom overlay for iframe pop-out interception */
+  .video-container iframe {
+    pointer-events: auto;
+  }
+  
+  /* Style for the pop-out overlay */
+  .video-container [data-testid="iframe-popout-overlay"] {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+  }
+  
+  .video-container [data-testid="iframe-popout-overlay"]:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+  
+  .pdf-viewer::before {
     content: '';
     position: absolute;
     top: 8px;
