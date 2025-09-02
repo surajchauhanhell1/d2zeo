@@ -22,6 +22,24 @@ const analytics = getAnalytics(app);
 export const auth = getAuth(app);
 export const database = getDatabase(app);
 
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyCKEK1tBDqxHBuwiezIBlJkiWIgGqROogY",
+  authDomain: "d2zero.firebaseapp.com",
+  projectId: "d2zero",
+  storageBucket: "d2zero.firebasestorage.app",
+  messagingSenderId: "510533297980",
+  appId: "1:510533297980:web:249548ef6aa0d05740e039",
+  measurementId: "G-6WVWVC6D1L"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
+export const auth = getAuth(app);
+export const database = getDatabase(app);
+
 interface SessionInfo {
   isTrialUser: boolean;
   sessionStartTime: number;
@@ -274,24 +292,6 @@ class FirebaseAuthManager {
     const remaining = this.sessionInfo.sessionDuration - elapsed;
     return Math.max(0, remaining);
   }
-
-  onSessionExpired(callback: () => void) {
-    this.onSessionExpiredCallback = callback;
-  }
-
-  onSessionConflict(callback: () => void) {
-    this.onSessionConflictCallback = callback;
-  }
-
-  // Check if another session might have started elsewhere
-  checkForSessionConflict(): boolean {
-    if (!this.sessionInfo) return false;
-    
-    // This is now handled by the real-time database monitoring
-    return false;
-  }
-}
-
 export const firebaseAuthManager = new FirebaseAuthManager();
 
 // Auth helper functions
