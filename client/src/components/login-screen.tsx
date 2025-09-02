@@ -3,7 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { loginWithEmail } from '@/lib/firebase';
+import { loginWithEmail, firebaseAuthManager } from '@/lib/firebase';
 import { User, Mail, Lock } from 'lucide-react';
 
 interface LoginScreenProps {
@@ -24,6 +24,12 @@ export default function LoginScreen({ onAuthenticated }: LoginScreenProps) {
     try {
       await loginWithEmail(email, password);
       onAuthenticated();
+      
+      // Show trial notification if this is a trial user
+      const sessionInfo = firebaseAuthManager.getSessionInfo();
+      if (sessionInfo?.isTrialUser) {
+        console.log('Trial user logged in - 2 minute session started');
+      }
     } catch (error: any) {
       setError(error.message || 'Login failed. Please check your credentials.');
       setEmail('');
@@ -106,6 +112,9 @@ export default function LoginScreen({ onAuthenticated }: LoginScreenProps) {
           <div className="mt-6 text-center">
             <p className="text-xs text-muted-foreground">
               Only registered users can access this application
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Trial account: trial@d2zero.com (2-minute access)
             </p>
           </div>
         </CardContent>

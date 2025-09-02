@@ -1,20 +1,33 @@
 import { useState, useEffect } from 'react';
 import LoginScreen from '@/components/login-screen';
 import FileGrid from '@/components/file-grid';
+import TrialTimer from '@/components/trial-timer';
+import SessionConflictModal from '@/components/session-conflict-modal';
 import { Button } from '@/components/ui/button';
 import { LogOut } from 'lucide-react';
-import { onAuthChange, logout } from '@/lib/firebase';
+import { onAuthChange, logout, firebaseAuthManager } from '@/lib/firebase';
 
 export default function Home() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [showSessionConflict, setShowSessionConflict] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthChange((user) => {
       setIsAuthenticated(!!user);
       setUserEmail(user?.email || null);
       setIsLoading(false);
+      
+      // If user is logged out unexpectedly and was a trial user, show conflict modal
+      if (!user && firebaseAuthManager.getSessionInfo()?.isTrialUser) {
+        setShowSessionConflict(true);
+      }
+    });
+
+    // Set up session expiry callback
+    firebaseAuthManager.onSessionExpired(() => {
+      setShowSessionConflict(true);
     });
 
     return () => unsubscribe();
@@ -34,6 +47,15 @@ export default function Home() {
     }
   };
 
+  const handleSessionConflictClose = () => {
+    setShowSessionConflict(false);
+    setIsAuthenticated(false);
+    setUserEmail(null);
+  };
+
+  const handleTrialExpiry = () => {
+    setShowSessionConflict(true);
+  };
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center gradient-bg">
@@ -81,6 +103,15 @@ export default function Home() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <FileGrid />
       </main>
+
+      {/* Trial Timer */}
+      <TrialTimer onExpiry={handleTrialExpiry} />
+
+      {/* Session Conflict Modal */}
+      <SessionConflictModal
+        isOpen={showSessionConflict}
+        onClose={handleSessionConflictClose}
+      />
     </div>
   );
 }
