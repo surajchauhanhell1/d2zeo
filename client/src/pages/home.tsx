@@ -21,7 +21,7 @@ export default function Home() {
     });
 
     // Check initial authentication state
-    const checkAuth = () => {
+    const checkAuth = async () => {
       // Try to initialize session from stored data
       const sessionRestored = await firebaseAuthManager.initializeSession();
       const authenticated = firebaseAuthManager.isAuthenticated();
