@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { authManager } from '@/lib/auth-manager';
+import { firebaseAuthManager } from '@/lib/firebase';
 import { Card, CardContent } from '@/components/ui/card';
 import { Clock, AlertTriangle } from 'lucide-react';
 
@@ -12,7 +12,7 @@ export default function TrialTimer({ onExpiry }: TrialTimerProps) {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
-    const sessionInfo = authManager.getSessionInfo();
+    const sessionInfo = firebaseAuthManager.getSessionInfo();
     if (!sessionInfo?.isTrialUser) {
       setIsVisible(false);
       return;
@@ -21,7 +21,7 @@ export default function TrialTimer({ onExpiry }: TrialTimerProps) {
     setIsVisible(true);
 
     const updateTimer = () => {
-      const remaining = authManager.getRemainingTime();
+      const remaining = firebaseAuthManager.getRemainingTime();
       setRemainingTime(remaining);
 
       if (remaining <= 0) {

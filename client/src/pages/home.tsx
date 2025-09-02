@@ -4,7 +4,7 @@ import FileGrid from '@/components/file-grid';
 import TrialTimer from '@/components/trial-timer';
 import { Button } from '@/components/ui/button';
 import { LogOut } from 'lucide-react';
-import { authManager } from '@/lib/auth-manager';
+import { firebaseAuthManager } from '@/lib/firebase';
 
 export default function Home() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -14,7 +14,7 @@ export default function Home() {
 
   useEffect(() => {
     // Set up logout callback
-    authManager.setLogoutCallback(() => {
+    firebaseAuthManager.setLogoutCallback(() => {
       setIsAuthenticated(false);
       setUserEmail(null);
       setIsTrialUser(false);
@@ -22,8 +22,10 @@ export default function Home() {
 
     // Check initial authentication state
     const checkAuth = () => {
-      const authenticated = authManager.isAuthenticated();
-      const sessionInfo = authManager.getSessionInfo();
+      // Try to initialize session from stored data
+      const sessionRestored = await firebaseAuthManager.initializeSession();
+      const authenticated = firebaseAuthManager.isAuthenticated();
+      const sessionInfo = firebaseAuthManager.getSessionInfo();
       
       setIsAuthenticated(authenticated);
       setUserEmail(sessionInfo?.email || null);
@@ -35,7 +37,7 @@ export default function Home() {
   }, []);
 
   const handleAuthenticated = () => {
-    const sessionInfo = authManager.getSessionInfo();
+    const sessionInfo = firebaseAuthManager.getSessionInfo();
     if (sessionInfo) {
       setIsAuthenticated(true);
       setUserEmail(sessionInfo.email);
@@ -45,7 +47,7 @@ export default function Home() {
 
   const handleLogout = async () => {
     try {
-      authManager.logout();
+      await firebaseAuthManager.logout();
       setIsAuthenticated(false);
       setUserEmail(null);
       setIsTrialUser(false);

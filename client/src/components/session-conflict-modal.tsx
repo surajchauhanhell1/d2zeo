@@ -39,17 +39,20 @@ export default function SessionConflictModal({ isOpen, onClose }: SessionConflic
         <DialogHeader>
           <div className="flex items-center gap-2 mb-2">
             <AlertTriangle className="w-6 h-6 text-destructive" />
-            <DialogTitle>Session Conflict</DialogTitle>
+            <DialogTitle>Session Terminated</DialogTitle>
           </div>
           <DialogDescription className="text-left">
-            Your trial account has been logged in from another location. Only one active session is allowed for trial accounts.
+            Your session has been terminated. This can happen if:
+            • Trial account logged in from another device
+            • Another user logged in with the same email
+            • Trial time has expired
           </DialogDescription>
         </DialogHeader>
         
         <div className="space-y-4">
           <div className="bg-muted p-4 rounded-lg">
             <p className="text-sm text-muted-foreground">
-              You will be automatically logged out in <span className="font-bold text-destructive">{countdown}</span> seconds.
+              You will be redirected to login in <span className="font-bold text-destructive">{countdown}</span> seconds.
             </p>
           </div>
           
@@ -58,7 +61,7 @@ export default function SessionConflictModal({ isOpen, onClose }: SessionConflic
             className="w-full"
             variant="destructive"
           >
-            Logout Now
+            Return to Login
           </Button>
         </div>
       </DialogContent>
